@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <title>PSWProject</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="Public/Assets/css/bootstrap.min.css">
+</head>
+
+<body class="bg-light">
+    <div class="d-flex min-vh-100 justify-content-center align-items-center">
+        <div class="container text-center">
+            <div class="row mb-3">
+                <div class="col-12">
+                    <h1 class="text text-success">Hello!!!</h1>
+                </div>
+            </div>
+
+            <div class="row mb-3" id="information_input">
+                <div class="col-md-8 mx-auto">
+                    <div class="card border-dark shadow-sm">
+                        <div class="card-body">
+                            <form id="loginForm">
+                                <div class="mb-3">
+                                    <label for="email" class="d-block text-start">Email</label>
+                                    <input type="text" name="email" id="email" class="form-control" placeholder="Your Email" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="password" class="d-block text-start">Password</label>
+                                    <input type="password" name="password" id="password" class="form-control" placeholder="Your Password" required>
+                                </div>
+                                <div class="mb-3 d-block text-end">
+                                    <button type="submit" class="btn btn-success">Login</button>
+                                </div>                                                  
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3 text-start">
+                        <a href="signup.html" class="btn btn-outline-dark shadow-sm mt-2">Sign Up?</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 1. Trik Sapu Bersih: Otomatis logout jika user kembali ke halaman login
+        fetch('logout.php').catch(e => console.log('Sesi sudah bersih.'));
+
+        // 2. Script Login kamu yang sudah ada sebelumnya
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            // ... (kode login kamu yang sebelumnya) ...
+        });
+        
+        document.getElementById('loginForm').addEventListener('submit', function(event) {
+            event.preventDefault(); 
+
+            let form = this;
+            let formData = new FormData(form);
+
+            fetch('login_process.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    window.location.href = data.redirect; 
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan pada server saat login.');
+            });
+        });
+    </script>
+</body>

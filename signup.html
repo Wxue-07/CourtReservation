@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PSWProject</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="Public/Assets/css/bootstrap.min.css">
+</head>
+
+<body class="bg-light">
+    <div class="d-flex min-vh-100 justify-content-center align-items-center">
+        
+        <div class="container text-center">
+            <div class="row mb-3">
+                <div class="col-12">
+                    <h1 class="text text-success">Please Sign Up First :)</h1>
+                </div>
+            </div>
+
+            <div class="row mb-3" id="information_input">
+                <div class="col-md-8 mx-auto">
+                    <div class="card border-dark shadow-sm">
+                        <div class="card-body">
+                            <form id="signupForm">
+                                <div class="mb-3">
+                                    <label for="name" class="d-block text-start">Name</label>
+                                    <input type="text" name="name" id="name" class="form-control" placeholder="Your Name" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="email" class="d-block text-start">Email</label>
+                                    <input type="text" name="email" id="email" class="form-control" placeholder="Your Email" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="password" class="d-block text-start">Password</label>
+                                    <input type="password" name="password" id="password" class="form-control" placeholder="Your Password" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="phonenumber" class="d-block text-start">Phone Number</label>
+                                    <input type="tel" name="phonenumber" id="phonenumber" class="form-control" placeholder="Your Phone Number" required>
+                                </div>                                
+                                <div class="mb-3 d-block text-end">
+                                    <button type="submit" class="btn btn-success" onclick="">Sign Up</button>
+                                </div>                                                  
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="mb-3 text-start">
+                        <a href="index.html" class="btn btn-outline-dark shadow-sm mt-2">Return to Login Page?</a>
+                    </div>                    
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.getElementById('signupForm').addEventListener('submit', function(e) {
+            e.preventDefault(); // Tahan dulu pengiriman form
+
+            // Ambil nilai password
+            const password = document.getElementById('password').value;
+
+            // Regex: Wajib angka (\d), minimal 8 karakter ({8,}), dari awal (^) sampai akhir ($)
+            const regexAngka = /^\d{8,}$/;
+
+            // Uji kecocokan password dengan aturan regex
+            if (!regexAngka.test(password)) {
+                alert("Gagal: Password WAJIB berupa angka dan minimal 8 digit!");
+                return; // Hentikan eksekusi di sini
+            }
+
+            // Jika lolos validasi, baru kirim data ke PHP
+            let formData = new FormData(this);
+
+            fetch('signup_process.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.status === 'success') {
+                    alert('Pendaftaran Berhasil! Silakan login.');
+                    window.location.href = 'index.html'; // Pindah ke halaman login
+                } else {
+                    alert('Pendaftaran Gagal: ' + data.message);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    </script>
+    <script src="Public/Assets/js/bootstrap.bundle.min.js"></script>
+</body>

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PSWProject</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="Public/Assets/css/bootstrap.min.css">
+</head>
+
+<style>
+    .option-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .option-card:hover {
+        transform: translateY(-10px); 
+        
+        box-shadow: 0 1rem 3rem rgba(0,0,0,0.2) !important;
+        
+        cursor: pointer;
+    }
+</style>
+
+<body class="bg-light">
+    <div class="d-flex min-vh-100 justify-content-center align-items-center">
+        
+        <div class="container">
+            <div class="row mb-5">
+                <div class="col-md-9 mx-auto">
+                    <a href="#" id="btnLogout" class="btn btn-outline-dark shadow-sm">&larr; Return to Login Page?</a>
+                </div>
+            </div>
+            
+            <div class="row mb-3 text-center">
+                <div class="col-12">
+                    <h1 class="text text-success">Hello, User!</h1>
+                </div>
+            </div>
+
+            <div class="row mb-3  text-center" id="option-box">
+                <div class="col-md-8 mx-auto">
+                    <div class="card border-dark shadow">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <a href="booking.html" class="text-decoration-none">
+                                        <div class="card option-card bg-success text-white p-4 shadow">
+                                            <h3>Book Now</h3>
+                                            <p>Reservasi lapangan untuk hari ini</p>
+                                        </div>
+                                    </a>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <a href="checkreservation.html" class="text-decoration-none">
+                                        <div class="card option-card bg-success text-white p-4 shadow">
+                                            <h3>Check Reservation</h3>
+                                            <p>Melihat reservasi yang pernah dibuat</p>
+                                        </div>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>                   
+                </div>  
+            </div>
+        </div>    
+    </div>
+    <script>
+        fetch('get_session.php')
+        .then(response => response.json())
+        .then(data => {
+            if (!data.logged_in) {
+                window.location.href = 'index.html';
+            } else {
+                const title = document.querySelector('.text-success');
+                if(title) title.textContent = `Hello, ${data.username}!`;
+            }
+        });
+
+        const btnLogout = document.getElementById('btnLogout');
+            if (btnLogout) {
+                btnLogout.addEventListener('click', function(e) {
+                    e.preventDefault(); // Cegah pindah halaman otomatis
+                    if (confirm("Apakah Anda yakin ingin logout?")) {
+                        fetch('logout.php')
+                        .then(response => response.json())
+                        .then(data => {
+                            if(data.status === 'success') {
+                                // Sesi di server sudah hancur, baru kita pindah ke halaman login
+                                window.location.href = 'index.html'; 
+                            }
+                        })
+                        .catch(error => console.error('Error logging out:', error));
+                    }
+                });
+            }
+    </script>
+</body>

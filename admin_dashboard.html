@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PSWProject - Admin Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="Public/Assets/css/bootstrap.min.css">
+</head>
+
+<body class="bg-light">
+
+    <div class="container py-5 col-9 mt-3">
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold text-danger">Admin Dashboard</h2>
+            <button id="btnLogout" class="btn btn-outline-danger shadow-sm">Logout</button>
+        </div>
+
+        <ul class="nav nav-tabs border-dark shadow-sm" id="adminTabs" role="tabpanel">
+            <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#ongoing">Ongoing</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#upcoming">Upcoming</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#outdated">History</button></li>
+        </ul>
+
+        <div class="tab-content bg-white p-4 border rounded-bottom shadow-sm" id="adminApprovalContent">
+            
+            <div class="tab-pane fade show active" id="ongoing">
+                <table class="table table-hover align-middle">
+                    <thead class="table-danger">
+                        <tr><th>Customer</th><th>Date</th><th>Court</th><th>Session</th><th>Status</th><th class="text-center">Action</th></tr>
+                    </thead>
+                    <tbody id="adminOngoingTable">
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="tab-pane fade" id="upcoming">
+                <table class="table table-hover align-middle">
+                    <thead class="table-primary">
+                        <tr>
+                            <th>Customer</th><th>Date</th><th>Court</th><th>Session</th><th>Status</th>
+                            <th class="text-center">Action</th> 
+                        </tr>
+                    </thead>
+                    <tbody id="adminUpcomingTable">
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="tab-pane fade" id="outdated">
+                <table class="table table-hover align-middle">
+                    <thead class="table-secondary">
+                        <tr><th>Customer</th><th>Date</th><th>Court</th><th>Session</th><th>Status</th></tr>
+                    </thead>
+                    <tbody id="adminHistoryTable">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 1. Memuat Data Saat Halaman Dibuka
+        document.addEventListener('DOMContentLoaded', function() {
+            fetch('admin_get_reservations.php')
+            .then(response => response.json())
+            .then(data => {
+                if(data.status === 'success') {
+                    // Ongoing dan Upcoming menggunakan 'true' agar mengecek kolom Action
+                    renderTable('adminOngoingTable', data.ongoing, true);   
+                    renderTable('adminUpcomingTable', data.upcoming, true); 
+                    renderTable('adminHistoryTable', data.history, false);
+                } else {
+                    alert('Gagal memuat data: ' + data.message);
+                }
+            })
+            .catch(error => console.error('Error fetching data:', error));
+        });
+
+        // 2. Fungsi Pembuat Baris Tabel
+        function renderTable(tbodyId, dataArray, showActions) {
+            const tbody = document.getElementById(tbodyId);
+            tbody.innerHTML = ''; 
+
+            if(dataArray.length === 0) {
+                let colCount = showActions ? 6 : 5;
+                tbody.innerHTML = `<tr><td colspan="${colCount}" class="text-center text-muted py-3">Tidak ada data</td></tr>`;
+                return;
+            }
+
+            dataArray.forEach(row => {
+                let badgeColor = 'bg-secondary';
+                if(row.status === 'Pending') badgeColor = 'bg-warning text-dark';
+                if(row.status === 'Approved') badgeColor = 'bg-primary';
+                if(row.status === 'Canceled') badgeColor = 'bg-danger';
+                if(row.status === 'Finished') badgeColor = 'bg-success';
+
+                // Logika Tombol Action yang diperbarui
+                let actionHtml = '';
+                if (showActions) {
+                    if (row.status === 'Pending') {
+                        actionHtml = `
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-success btn-action" data-action="Approve" data-id="${row.id}">Approve</button>
+                                <button class="btn btn-sm btn-danger btn-action" data-action="Cancel" data-id="${row.id}">Cancel</button>
+                            </td>
+                        `;
+                    } else {
+                        // Jika statusnya Approved/Lainnya tapi berada di tab Ongoing/Upcoming
+                        actionHtml = `<td class="text-center text-muted fw-bold">-</td>`;
+                    }
+                }
+
+                let tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${row.customer}</td>
+                    <td>${row.date}</td>
+                    <td>${row.court}</td>
+                    <td>${row.session}</td>
+                    <td><span class="badge ${badgeColor}">${row.status}</span></td>
+                    ${actionHtml}
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // 3. Sistem Tombol Approve & Cancel
+        document.addEventListener('click', function (e) {
+            if (e.target.classList.contains('btn-action')) {
+                const action = e.target.getAttribute('data-action'); 
+                const reservationId = e.target.getAttribute('data-id');
+
+                if (confirm("Are you sure you want to " + action + " this reservation?")) {
+                    
+                    let formData = new FormData();
+                    formData.append('reservation_id', reservationId);
+                    formData.append('action', action);
+
+                    fetch('admin_action.php', { 
+                        method: 'POST', 
+                        body: formData 
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if(data.status === 'success') {
+                            alert("Reservation " + action + "ed!");
+                            location.reload(); 
+                        } else {
+                            alert('Error: ' + data.message);
+                        }
+                    })
+                    .catch(error => console.error('Error System:', error));
+                }
+            }
+        });
+
+        // 4. Sistem Tombol Logout
+        const btnLogout = document.getElementById('btnLogout');
+        if (btnLogout) {
+            btnLogout.addEventListener('click', function() {
+                if (confirm("Apakah Anda yakin ingin logout?")) {
+                    fetch('logout.php')
+                    .then(response => response.json())
+                    .then(data => {
+                        if(data.status === 'success') {
+                            // Tendang kembali ke halaman login
+                            window.location.href = 'index.html'; 
+                        }
+                    })
+                    .catch(error => console.error('Error logging out:', error));
+                }
+            });
+        }
+    </script>
+    <script src="Public/Assets/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
